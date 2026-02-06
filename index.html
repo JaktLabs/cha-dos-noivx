@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lista de Presentes — Chá dos Noivos</title>
+  <title>Chá de Casa Nova — Adryel & Ketllen</title>
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -12,12 +13,52 @@
       padding: 20px;
       text-align: center;
     }
+
     h1 {
       color: #2c6e49;
     }
+
+    .box {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      background-color: #2c6e49;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      cursor: pointer;
+      margin-top: 15px;
+      font-size: 15px;
+    }
+
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+
     table {
       width: 100%;
-      max-width: 600px;
+      max-width: 700px;
       margin: 30px auto;
       border-collapse: collapse;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
@@ -25,151 +66,178 @@
       border-radius: 10px;
       overflow: hidden;
     }
+
     th, td {
       padding: 12px;
       border-bottom: 1px solid #ddd;
     }
+
     th {
       background-color: #2c6e49;
       color: white;
     }
+
     tr:hover {
       background-color: #f1f1f1;
     }
-    button {
-      background-color: #2c6e49;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 14px;
-      cursor: pointer;
+
+    a {
+      color: #2c6e49;
+      text-decoration: none;
+      font-weight: 500;
     }
-    button:disabled {
-      background-color: #999;
-      cursor: not-allowed;
-    }
+
     .footer {
       margin-top: 40px;
       font-size: 0.9em;
       color: #777;
     }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
+
 <body>
 
-  <h1>Lista de Presentes — Chá dos Noivos</h1>
-  <p>Escolha um presente e nos ajude a montar nosso lar 🏡</p>
+  <!-- CONFIRMAÇÃO DE PRESENÇA -->
+  <div id="confirmacao" class="box">
+    <h1>Confirmação de Presença 💚</h1>
+    <p>Ficaremos muito felizes com a sua presença!</p>
 
-  <table id="listaPresentes">
-    <thead>
-      <tr>
-        <th>Presente</th>
-        <th>Status</th>
-        <th>Ação</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td colspan="3">Carregando...</td></tr>
-    </tbody>
-  </table>
+    <form onsubmit="confirmarPresenca(event)">
+      <input type="text" id="nome" placeholder="Seu nome" required />
+      <input type="number" id="qtd" min="1" value="1" required />
+      <textarea id="obs" placeholder="Observações (opcional)"></textarea>
+      <button type="submit">Confirmar presença</button>
+    </form>
+  </div>
+
+  <!-- LISTA DE PRESENTES -->
+  <div id="presentes" class="hidden">
+    <h1>Lista de Presentes — Chá de Casa Nova</h1>
+    <p>Escolha um presente e nos ajude a montar nosso lar 🏡</p>
+
+    <table id="listaPresentes">
+      <thead>
+        <tr>
+          <th>Presente</th>
+          <th>Status</th>
+          <th>Sugestão</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="footer">Com carinho, Adryel e Ketllen 💍</div>
 
-  <script>
-    const API_BASE = "https://script.google.com/macros/s/AKfycbyULpS5U5sa0CRy3f02DtovhiDNUFksfcYOy2JKOdrSbe6nCCDa-WN9oMRwzcmFyrWr/exec";
+<script>
+const API_BASE = "https://script.google.com/macros/s/AKfycbyULpS5U5sa0CRy3f02DtovhiDNUFksfcYOy2JKOdrSbe6nCCDa-WN9oMRwzcmFyrWr/exec";
 
-  // JSONP helper: injeta <script> e chama callbackName quando o servidor responder
-  function jsonpRequest(url, callbackName) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      // define global callback
-      window[callbackName] = function(data) {
-        resolve(data);
-        // cleanup
-        script.remove();
-        try { delete window[callbackName]; } catch(e){ window[callbackName] = undefined; }
-      };
-      script.onerror = function(e){
-        reject(new Error('Erro JSONP'));
-        script.remove();
-        try { delete window[callbackName]; } catch(e){ window[callbackName] = undefined; }
-      };
-      script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + encodeURIComponent(callbackName);
-      document.head.appendChild(script);
-    });
+// JSONP helper
+function jsonpRequest(url, callbackName) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    window[callbackName] = function(data) {
+      resolve(data);
+      script.remove();
+      delete window[callbackName];
+    };
+    script.onerror = () => reject();
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+    document.head.appendChild(script);
+  });
+}
+
+// CONFIRMAR PRESENÇA
+async function confirmarPresenca(e) {
+  e.preventDefault();
+
+  const nome = document.getElementById('nome').value;
+  const qtd = document.getElementById('qtd').value;
+  const obs = document.getElementById('obs').value;
+
+  const cb = 'cbConf_' + Date.now();
+  const url = `${API_BASE}?action=confirmar&nome=${encodeURIComponent(nome)}&qtd=${qtd}&obs=${encodeURIComponent(obs)}`;
+
+  const result = await jsonpRequest(url, cb);
+
+  if (result.status === 'success') {
+    document.getElementById('confirmacao').classList.add('hidden');
+    document.getElementById('presentes').classList.remove('hidden');
+    carregarPresentes();
+  } else {
+    alert('Erro ao confirmar presença.');
   }
+}
 
-  // carrega lista
-  async function carregarPresentes() {
-    try {
-      const cb = 'cbList_' + Date.now();
-      const url = API_BASE + '?action=list';
-      const data = await jsonpRequest(url, cb); // data é array de objetos
-      renderLista(data);
-    } catch (e) {
-      console.error(e);
-      alert('Erro ao carregar a lista (JSONP).');
+// LISTAR PRESENTES
+async function carregarPresentes() {
+  const cb = 'cbList_' + Date.now();
+  const data = await jsonpRequest(API_BASE + '?action=list', cb);
+  renderLista(data);
+}
+
+function renderLista(data) {
+  const tbody = document.querySelector("#listaPresentes tbody");
+  tbody.innerHTML = '';
+
+  data.forEach(item => {
+    const tr = document.createElement('tr');
+
+    const tdPres = document.createElement('td');
+    tdPres.textContent = item.Presente;
+
+    const tdStatus = document.createElement('td');
+    const status = item.Status.toLowerCase();
+    tdStatus.textContent = status;
+    tdStatus.style.color = status === 'reservado' ? 'red' : 'green';
+
+    const tdLink = document.createElement('td');
+    if (item.Link) {
+      const a = document.createElement('a');
+      a.href = item.Link;
+      a.target = '_blank';
+      a.textContent = 'Ver sugestão';
+      tdLink.appendChild(a);
+    } else {
+      tdLink.textContent = '-';
     }
-  }
 
-  function renderLista(data) {
-    const tbody = document.querySelector("#listaPresentes tbody");
-    tbody.innerHTML = '';
-    data.forEach(item => {
-      const tr = document.createElement('tr');
-      const tdPres = document.createElement('td');
-      tdPres.textContent = item.Presente || item.presente || '';
-
-      const tdStatus = document.createElement('td');
-      const status = (item.Status || item.status || 'disponivel').toString().toLowerCase();
-      tdStatus.textContent = status === 'reservado' ? 'reservado' : 'disponivel';
-      tdStatus.style.color = status === 'reservado' ? 'red' : 'green';
-
-      const tdAcao = document.createElement('td');
-      const btn = document.createElement('button');
-      if (status === 'reservado') {
-        btn.textContent = 'Reservado';
-        btn.disabled = true;
-      } else {
-        btn.textContent = 'Reservar';
-        btn.onclick = () => reservarPresente(tdPres.textContent);
-      }
-
-      tdAcao.appendChild(btn);
-      tr.appendChild(tdPres);
-      tr.appendChild(tdStatus);
-      tr.appendChild(tdAcao);
-      tbody.appendChild(tr);
-    });
-  }
-
-  async function reservarPresente(presente) {
-    const ok = confirm(`Deseja reservar o presente "${presente}"?`);
-    if (!ok) return;
-    try {
-      const cb = 'cbRes_' + Date.now();
-      const url = API_BASE + '?action=reserve&presente=' + encodeURIComponent(presente);
-      const result = await jsonpRequest(url, cb);
-      alert(result.message || (result.status || 'erro'));
-      if (result.status === 'success') carregarPresentes();
-    } catch (e) {
-      console.error(e);
-      alert('Erro ao reservar (JSONP).');
+    const tdAcao = document.createElement('td');
+    const btn = document.createElement('button');
+    if (status === 'reservado') {
+      btn.textContent = 'Reservado';
+      btn.disabled = true;
+    } else {
+      btn.textContent = 'Reservar';
+      btn.onclick = () => reservarPresente(item.Presente);
     }
-  }
 
-  // inicializa
+    tdAcao.appendChild(btn);
+
+    tr.append(tdPres, tdStatus, tdLink, tdAcao);
+    tbody.appendChild(tr);
+  });
+}
+
+// RESERVAR PRESENTE
+async function reservarPresente(presente) {
+  if (!confirm(`Deseja reservar o presente "${presente}"?`)) return;
+
+  const cb = 'cbRes_' + Date.now();
+  const url = `${API_BASE}?action=reserve&presente=${encodeURIComponent(presente)}`;
+  const result = await jsonpRequest(url, cb);
+
+  alert(result.message || 'Atualizado!');
   carregarPresentes();
+}
 </script>
 
-
-
-
-
-
-
-
-
-
-
-
+</body>
+</html>
