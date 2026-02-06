@@ -61,10 +61,10 @@
       max-width: 700px;
       margin: 30px auto;
       border-collapse: collapse;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       background: white;
       border-radius: 10px;
       overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     th, td {
@@ -87,14 +87,14 @@
       font-weight: 500;
     }
 
+    .hidden {
+      display: none;
+    }
+
     .footer {
       margin-top: 40px;
       font-size: 0.9em;
       color: #777;
-    }
-
-    .hidden {
-      display: none;
     }
   </style>
 </head>
@@ -112,9 +112,8 @@
       <textarea id="obs" placeholder="Observações (opcional)"></textarea>
       <button type="submit">Confirmar presença</button>
     </form>
-    <p id="mensagem-status" style="display:none; color: green; margin-top: 10px;">
-        Reserva feita com sucesso! Aguarde alguns segundos...
-    </p>
+
+    <p id="mensagem-status" style="display:none; color: green; margin-top: 12px;"></p>
   </div>
 
   <!-- LISTA DE PRESENTES -->
@@ -162,7 +161,10 @@ async function confirmarPresenca(e) {
   e.preventDefault();
 
   const btn = e.target.querySelector('button');
-  const msg = document.getElementById('msgConfirmacao');
+  if (btn.disabled) return;
+
+  const msg = document.getElementById('mensagem-status');
+  msg.style.display = 'block';
 
   btn.disabled = true;
   btn.textContent = 'Confirmando...';
@@ -175,16 +177,16 @@ async function confirmarPresenca(e) {
   try {
     const cb = 'cbConf_' + Date.now();
     const url = `${API_BASE}?action=confirmar&nome=${encodeURIComponent(nome)}&qtd=${qtd}&obs=${encodeURIComponent(obs)}`;
-
     const result = await jsonpRequest(url, cb);
 
     if (result.status === 'success') {
       msg.textContent = 'Presença confirmada com sucesso! 💚';
+
       setTimeout(() => {
         document.getElementById('confirmacao').classList.add('hidden');
         document.getElementById('presentes').classList.remove('hidden');
         carregarPresentes();
-      }, 800);
+      }, 900);
     } else {
       throw new Error();
     }
@@ -214,8 +216,8 @@ function renderLista(data) {
     tdPres.textContent = item.Presente;
 
     const tdStatus = document.createElement('td');
-    const status = item.Status.toLowerCase();
-    tdStatus.textContent = status;
+    const status = (item.Status || '').toLowerCase();
+    tdStatus.textContent = status || 'disponível';
     tdStatus.style.color = status === 'reservado' ? 'red' : 'green';
 
     const tdLink = document.createElement('td');
@@ -231,6 +233,7 @@ function renderLista(data) {
 
     const tdAcao = document.createElement('td');
     const btn = document.createElement('button');
+
     if (status === 'reservado') {
       btn.textContent = 'Reservado';
       btn.disabled = true;
@@ -240,7 +243,6 @@ function renderLista(data) {
     }
 
     tdAcao.appendChild(btn);
-
     tr.append(tdPres, tdStatus, tdLink, tdAcao);
     tbody.appendChild(tr);
   });
@@ -254,12 +256,10 @@ async function reservarPresente(presente) {
   const url = `${API_BASE}?action=reserve&presente=${encodeURIComponent(presente)}`;
   const result = await jsonpRequest(url, cb);
 
-  alert(result.message || 'Atualizado!');
+  alert(result.message || 'Presente reservado!');
   carregarPresentes();
 }
 </script>
 
 </body>
 </html>
-
-
