@@ -112,6 +112,9 @@
       <textarea id="obs" placeholder="Observações (opcional)"></textarea>
       <button type="submit">Confirmar presença</button>
     </form>
+    <p id="mensagem-status" style="display:none; color: green; margin-top: 10px;">
+        Reserva feita com sucesso! Aguarde alguns segundos...
+    </p>
   </div>
 
   <!-- LISTA DE PRESENTES -->
@@ -158,21 +161,38 @@ function jsonpRequest(url, callbackName) {
 async function confirmarPresenca(e) {
   e.preventDefault();
 
+  const btn = e.target.querySelector('button');
+  const msg = document.getElementById('msgConfirmacao');
+
+  btn.disabled = true;
+  btn.textContent = 'Confirmando...';
+  msg.textContent = 'Aguarde, isso pode levar até 2 segundos ⏳';
+
   const nome = document.getElementById('nome').value;
   const qtd = document.getElementById('qtd').value;
   const obs = document.getElementById('obs').value;
 
-  const cb = 'cbConf_' + Date.now();
-  const url = `${API_BASE}?action=confirmar&nome=${encodeURIComponent(nome)}&qtd=${qtd}&obs=${encodeURIComponent(obs)}`;
+  try {
+    const cb = 'cbConf_' + Date.now();
+    const url = `${API_BASE}?action=confirmar&nome=${encodeURIComponent(nome)}&qtd=${qtd}&obs=${encodeURIComponent(obs)}`;
 
-  const result = await jsonpRequest(url, cb);
+    const result = await jsonpRequest(url, cb);
 
-  if (result.status === 'success') {
-    document.getElementById('confirmacao').classList.add('hidden');
-    document.getElementById('presentes').classList.remove('hidden');
-    carregarPresentes();
-  } else {
-    alert('Erro ao confirmar presença.');
+    if (result.status === 'success') {
+      msg.textContent = 'Presença confirmada com sucesso! 💚';
+      setTimeout(() => {
+        document.getElementById('confirmacao').classList.add('hidden');
+        document.getElementById('presentes').classList.remove('hidden');
+        carregarPresentes();
+      }, 800);
+    } else {
+      throw new Error();
+    }
+
+  } catch {
+    msg.textContent = 'Erro ao confirmar. Tente novamente.';
+    btn.disabled = false;
+    btn.textContent = 'Confirmar presença';
   }
 }
 
@@ -241,4 +261,5 @@ async function reservarPresente(presente) {
 
 </body>
 </html>
+
 
